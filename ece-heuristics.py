@@ -1,5 +1,6 @@
 import networkx as nx
 import numpy as np
+import os
 import pandas as pd
 import random
 import statistics
@@ -242,8 +243,12 @@ ece_heuristics = {
     "Agent & good with max value": agent_good_with_max_value,
     "Max-min matching": max_min_matching_heuristic}
 
+data_directory = 'data/'
+if not os.path.isdir(data_directory):
+    os.mkdir(data_directory)
+
 def get_filename(dist_name, n, m):
-    return 'data/' + dist_name + '-' + str(n) + '-' + str(m) + '.csv'
+    return data_directory + dist_name + '-' + str(n) + '-' + str(m) + '.csv'
 
 for dist_name, dist in dists.items():
     for n in [2, 3]:
