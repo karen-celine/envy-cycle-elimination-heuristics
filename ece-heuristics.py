@@ -151,7 +151,8 @@ def good_with_max_value(instance, alloc, unenvied_agents, unallocated_goods):
             good = g
     return (agent, good)
 
-def agent_good_with_max_value_first_round_only(instance, alloc, unenvied_agents, unallocated_goods):
+def agent_good_with_max_value_first_round_only(instance, alloc, unenvied_agents, 
+        unallocated_goods):
     max_value = 0
     agent = unenvied_agents[0]
     good = unallocated_goods[0]
@@ -239,7 +240,8 @@ ece_heuristics = {
     "No heuristic": None,
     "Agent with max value": agent_with_max_value,
     "Good with max value": good_with_max_value,
-    "Agent & good with max value (first round only)": agent_good_with_max_value_first_round_only,
+    "Agent & good with max value (first round only)":
+            agent_good_with_max_value_first_round_only,
     "Agent & good with max value": agent_good_with_max_value,
     "Max-min matching": max_min_matching_heuristic}
 
