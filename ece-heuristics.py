@@ -1,15 +1,17 @@
+import ast
 import networkx as nx
 import numpy as np
 import os
 import pandas as pd
 import random
 import statistics
+import types
 
 ########################
 # GENERATING INSTANCES #
 ########################
 
-def generate_instance(n, m, dist):
+def generate_instance_from_distribution(dist, n, m):
     utils = [[0] * m for i in range(n)]
     for i in range(n):
         for j in range(m):
@@ -21,6 +23,24 @@ def generate_instance(n, m, dist):
         utils[i] = list(map(lambda x: x/sum(utils[i]), utils[i]))
 
     return utils
+
+def read_instances_from_file(filename):
+    df = pd.read_csv(filename)
+    return list(map(ast.literal_eval, df["instances"].values))
+
+def get_instances(source, n, m):
+    if isinstance(source, str):
+        return read_instances_from_file(source + str(n) + "-" + str(m) + ".csv")
+
+    elif callable(source):
+        instances = []
+        for i in range(20):
+            instance = generate_instance_from_distribution(source, n, m)
+            instances.append(instance)
+        return instances
+
+    else:
+        return []
 
 ###############################
 # FINDING THE OPTIMAL WELFARE #
@@ -234,7 +254,8 @@ col_names = [
 dists = {
     "random": random.random,
     "exp": lambda: random.expovariate(1.0),
-    "lognorm": lambda: random.lognormvariate(0.0, 1.0)}
+    "lognorm": lambda: random.lognormvariate(0.0, 1.0),
+    "spliddit": "instances/spliddit/"}
 
 ece_heuristics = {
     "No heuristic": None,
@@ -256,10 +277,11 @@ for dist_name, dist in dists.items():
     for n in [2, 3]:
         for m in range(n, 10):
             df = pd.DataFrame(columns = col_names)
-            for i in range(10000):
+            
+            instances = get_instances(dist, n, m)
+            for instance in instances:
                 result = []
 
-                instance = generate_instance(n, m, dist)
                 instance_muw = muw(instance)
                 instance_mew = mew(instance)
 
@@ -291,13 +313,13 @@ def process_data(dist_name, n, m):
     EP_aves = []
     for i in range(6):
         UW = df['UW.' + str(i)].values.tolist()
-        UP = list(map(lambda x, y: x/y, MUW, UW))
-        UP_ave = statistics.harmonic_mean(UP)
+        UP_inv = list(map(lambda x, y: x/y if y > 0 else 1, UW, MUW))
+        UP_ave = 1/statistics.mean(UP_inv)
         UP_aves.append(UP_ave)
 
         EW = df['EW.' + str(i)].values.tolist()
-        EP = list(map(lambda x, y: x/y, MEW, EW))
-        EP_ave = statistics.harmonic_mean(EP)
+        EP_inv = list(map(lambda x, y: x/y if y > 0 else 1, EW, MEW))
+        EP_ave = 1/statistics.mean(EP_inv)
         EP_aves.append(EP_ave)
     
     return (UP_aves, EP_aves)
