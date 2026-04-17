@@ -131,47 +131,47 @@ def ece(instance, heuristic = None):
 # HEURISTICS FOR THE ECE ALGORITHM #
 ####################################
 
-def agent_with_max_value(instance, alloc, unenvied_agents, unallocated_goods):
+def agent_with_max_util(instance, alloc, unenvied_agents, unallocated_goods):
     good = unallocated_goods[0]
-    max_value = 0
+    max_util = 0
     agent = unenvied_agents[0]
     for i in unenvied_agents:
-        if instance[i][good] > max_value:
-            max_value = instance[i][good]
+        if instance[i][good] > max_util:
+            max_util = instance[i][good]
             agent = i
     return (agent, good)
 
-def good_with_max_value(instance, alloc, unenvied_agents, unallocated_goods):
+def good_with_max_util(instance, alloc, unenvied_agents, unallocated_goods):
     agent = unenvied_agents[0]
-    max_value = 0
+    max_util = 0
     good = unallocated_goods[0]
     for g in unallocated_goods:
-        if instance[agent][g] > max_value:
-            max_value = instance[agent][g]
+        if instance[agent][g] > max_util:
+            max_util = instance[agent][g]
             good = g
     return (agent, good)
 
-def agent_good_with_max_value_first_round_only(instance, alloc, unenvied_agents, 
+def agent_good_with_max_util_first_round_only(instance, alloc, unenvied_agents, 
         unallocated_goods):
-    max_value = 0
+    max_util = 0
     agent = unenvied_agents[0]
     good = unallocated_goods[0]
     if len(unallocated_goods) == len(instance[0]):
         for i in unenvied_agents:
             for g in unallocated_goods:
-                if instance[i][g] > max_value:
-                    max_value = instance[i][g]
+                if instance[i][g] > max_util:
+                    max_util = instance[i][g]
                     agent, good = i, g
     return (agent, good)
 
-def agent_good_with_max_value(instance, alloc, unenvied_agents, unallocated_goods):
-    max_value = 0
+def agent_good_with_max_util(instance, alloc, unenvied_agents, unallocated_goods):
+    max_util = 0
     agent = unenvied_agents[0]
     good = unallocated_goods[0]
     for i in unenvied_agents:
         for g in unallocated_goods:
-            if instance[i][g] > max_value:
-                max_value = instance[i][g]
+            if instance[i][g] > max_util:
+                max_util = instance[i][g]
                 agent, good = i, g
     return (agent, good)
 
@@ -187,12 +187,12 @@ def max_min_matching(instance):
         for j in range(m):
             graph.add_edge(i, goods[j], weight = instance[i][j])
 
-    values = sorted(sum(instance, []))
-    low, high = 0, len(values)-1
+    utils = sorted(sum(instance, []))
+    low, high = 0, len(utils)-1
 
     while low <= high:
         mid = (low + high)//2
-        threshold = values[mid]
+        threshold = utils[mid]
 
         new_graph = nx.Graph()
         new_graph.add_nodes_from(graph.nodes)
@@ -225,10 +225,10 @@ def max_min_matching_heuristic(instance, alloc, unenvied_agents, unallocated_goo
 col_names = [
     "Instance", "MUW", "MEW", 
     "No heuristic", "UW.0", "EW.0",
-    "Agent with max value", "UW.1", "EW.1",
-    "Good with max value", "UW.2", "EW.2",
-    "Agent & good with max value (first round only)", "UW.3", "EW.3", 
-    "Agent & good with max value", "UW.4", "EW.4",
+    "Agent with max util", "UW.1", "EW.1",
+    "Good with max util", "UW.2", "EW.2",
+    "Agent & good with max util (first round only)", "UW.3", "EW.3", 
+    "Agent & good with max util", "UW.4", "EW.4",
     "Max-min matching", "UW.5", "EW.5"]
 
 dists = {
@@ -238,11 +238,11 @@ dists = {
 
 ece_heuristics = {
     "No heuristic": None,
-    "Agent with max value": agent_with_max_value,
-    "Good with max value": good_with_max_value,
-    "Agent & good with max value (first round only)":
-            agent_good_with_max_value_first_round_only,
-    "Agent & good with max value": agent_good_with_max_value,
+    "Agent with max util": agent_with_max_util,
+    "Good with max util": good_with_max_util,
+    "Agent & good with max util (first round only)":
+            agent_good_with_max_util_first_round_only,
+    "Agent & good with max util": agent_good_with_max_util,
     "Max-min matching": max_min_matching_heuristic}
 
 data_directory = 'data/'
