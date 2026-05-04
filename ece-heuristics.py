@@ -15,12 +15,7 @@ def generate_instance_from_distribution(dist, n, m):
     utils = [[0] * m for i in range(n)]
     for i in range(n):
         for j in range(m):
-            # Sample utilities from probability distribution
             utils[i][j] = dist()
-    
-    # Normalize instance
-    for i in range(n):
-        utils[i] = list(map(lambda x: x/sum(utils[i]), utils[i]))
 
     return utils
 
@@ -28,15 +23,25 @@ def read_instances_from_file(filename):
     df = pd.read_csv(filename)
     return list(map(ast.literal_eval, df["instances"].values))
 
+def normalize(utils):
+    for i in range(n):
+        utils[i] = list(map(lambda x: x/sum(utils[i]), utils[i]))
+
+    return utils
+
 def get_instances(source, n, m):
     if isinstance(source, str):
-        return read_instances_from_file(source + str(n) + "-" + str(m) + ".csv")
+        unnormalized_instances = read_instances_from_file(source + str(n) + "-" + str(m) + ".csv")
+        instances = []
+        for instance in unnormalized_instances:
+            instances.append(normalize(instance))
+        return instances
 
     elif callable(source):
         instances = []
-        for i in range(20):
+        for i in range(10000):
             instance = generate_instance_from_distribution(source, n, m)
-            instances.append(instance)
+            instances.append(normalize(instance))
         return instances
 
     else:
