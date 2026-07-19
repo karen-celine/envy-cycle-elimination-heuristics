@@ -31,7 +31,8 @@ def normalize(utils):
 
 def get_instances(source, n, m):
     if isinstance(source, str):
-        unnormalized_instances = read_instances_from_file(source + str(n) + "-" + str(m) + ".csv")
+        unnormalized_instances = read_instances_from_file(
+            source + str(n) + "-" + str(m) + ".csv")
         instances = []
         for instance in unnormalized_instances:
             instances.append(normalize(instance))
