@@ -5,7 +5,9 @@ import os
 import pandas as pd
 import random
 import statistics
+import sys
 import types
+from math import inf
 
 ########################
 # GENERATING INSTANCES #
@@ -21,7 +23,7 @@ def generate_instance_from_distribution(dist, n, m):
 
 def read_instances_from_file(filename):
     df = pd.read_csv(filename)
-    return list(map(ast.literal_eval, df["instances"].values))
+    return list(map(ast.literal_eval, df['instances'].values))
 
 def normalize(utils):
     for i in range(n):
@@ -29,18 +31,18 @@ def normalize(utils):
 
     return utils
 
-def get_instances(source, n, m):
+def get_instances(source, n, m, max_instances):
     if isinstance(source, str):
         unnormalized_instances = read_instances_from_file(
-            source + str(n) + "-" + str(m) + ".csv")
+            source + str(n) + '-' + str(m) + '.csv')
         instances = []
-        for instance in unnormalized_instances:
+        for instance in unnormalized_instances[:max_instances]:
             instances.append(normalize(instance))
         return instances
 
     elif callable(source):
         instances = []
-        for i in range(10000):
+        for i in range(max_instances):
             instance = generate_instance_from_distribution(source, n, m)
             instances.append(normalize(instance))
         return instances
@@ -205,7 +207,7 @@ def max_min_matching(instance):
     # Create a graph representing the instance
     n, m = len(instance), len(instance[0])
     agents = list(range(n))
-    goods = ["g"+str(j) for j in range(m)]
+    goods = ['g'+str(j) for j in range(m)]
     graph = nx.Graph()
     graph.add_nodes_from(agents, bipartite = 0)
     graph.add_nodes_from(goods, bipartite = 1)
@@ -223,8 +225,8 @@ def max_min_matching(instance):
         new_graph = nx.Graph()
         new_graph.add_nodes_from(graph.nodes)
         for edge in graph.edges.data():
-            if edge[2]["weight"] >= threshold:
-                new_graph.add_edge(edge[0], edge[1], weight = edge[2]["weight"])
+            if edge[2]['weight'] >= threshold:
+                new_graph.add_edge(edge[0], edge[1], weight = edge[2]['weight'])
 
         if len(nx.bipartite.maximum_matching(new_graph, agents)) == 2*n:
             graph = new_graph
@@ -249,28 +251,28 @@ def max_min_matching_heuristic(instance, alloc, unenvied_agents, unallocated_goo
 ########################
 
 col_names = [
-    "Instance", "MUW", "MEW", 
-    "No heuristic", "UW.0", "EW.0",
-    "Agent with max util", "UW.1", "EW.1",
-    "Good with max util", "UW.2", "EW.2",
-    "Agent & good with max util (first round only)", "UW.3", "EW.3", 
-    "Agent & good with max util", "UW.4", "EW.4",
-    "Max-min matching", "UW.5", "EW.5"]
+    'Instance', 'MUW', 'MEW', 
+    'No heuristic', 'UW.0', 'EW.0',
+    'Agent with max util', 'UW.1', 'EW.1',
+    'Good with max util', 'UW.2', 'EW.2',
+    'Agent & good with max util (first round only)', 'UW.3', 'EW.3', 
+    'Agent & good with max util', 'UW.4', 'EW.4',
+    'Max-min matching', 'UW.5', 'EW.5']
 
 dists = {
-    "random": random.random,
-    "exp": lambda: random.expovariate(1.0),
-    "lognorm": lambda: random.lognormvariate(0.0, 1.0),
-    "spliddit": "instances/spliddit/"}
+    'random': random.random,
+    'exp': lambda: random.expovariate(1.0),
+    'lognorm': lambda: random.lognormvariate(0.0, 1.0),
+    'spliddit': 'instances/spliddit/'}
 
 ece_heuristics = {
-    "No heuristic": None,
-    "Agent with max util": agent_with_max_util,
-    "Good with max util": good_with_max_util,
-    "Agent & good with max util (first round only)":
+    'No heuristic': None,
+    'Agent with max util': agent_with_max_util,
+    'Good with max util': good_with_max_util,
+    'Agent & good with max util (first round only)':
             agent_good_with_max_util_first_round_only,
-    "Agent & good with max util": agent_good_with_max_util,
-    "Max-min matching": max_min_matching_heuristic}
+    'Agent & good with max util': agent_good_with_max_util,
+    'Max-min matching': max_min_matching_heuristic}
 
 data_directory = 'data/'
 if not os.path.isdir(data_directory):
@@ -279,13 +281,54 @@ if not os.path.isdir(data_directory):
 def get_filename(dist_name, n, m):
     return data_directory + dist_name + '-' + str(n) + '-' + str(m) + '.csv'
 
+while True:
+    is_smaller = input('Run a smaller version of the experiment? (y/n) ')
+    if is_smaller.lower() == 'y':
+        while True:
+            try:
+                max_instances = int(input('Enter maximum number of instances for each distribution (1-10000): '))
+                break
+            except ValueError:
+                print('Please input an integer from 1 to 10000.')
+        break
+    elif is_smaller.lower() == 'n':
+        max_instances = 10000
+        break
+    else:
+        print('Please input "y" or "n".')
+
+while True:
+    has_seed = input('Use seeded random number generator? (y/n) ')
+    if has_seed.lower() == 'y':
+        while True:
+            has_custom_seed = input('Use custom seed? (y/n) ')
+            if has_custom_seed.lower() == 'y':
+                seed = input('Enter custom seed: ')
+                break
+            elif has_custom_seed.lower() == 'n':
+                seed = 'ece'
+                break
+            else:
+                print('Please input "y" or "n".')
+        break
+    elif has_seed.lower() == 'n':
+        seed = None
+        break
+    else:
+        print('Please input "y" or "n".')
+
+random.seed(seed)
+
 for dist_name, dist in dists.items():
+    print('Distribution: ' + dist_name)
     for n in [2, 3]:
         for m in range(n, 10):
             df = pd.DataFrame(columns = col_names)
             
-            instances = get_instances(dist, n, m)
-            for instance in instances:
+            instances = get_instances(dist, n, m, max_instances)
+            sys.stdout.write(f'n = {n}, m = {m}: 0 out of {len(instances)} instances')
+            for i in range(len(instances)):
+                instance = instances[i]
                 result = []
 
                 instance_muw = muw(instance)
@@ -301,6 +344,10 @@ for dist_name, dist in dists.items():
 
                 df.loc[len(df)] = result
 
+                sys.stdout.write('\r')
+                sys.stdout.write(f'n = {n}, m = {m}: {i+1: >5} out of {len(instances)} instances')
+            
+            print()
             filename = get_filename(dist_name, n, m)
             df.to_csv(filename)
 
@@ -320,19 +367,25 @@ def process_data(dist_name, n, m):
     for i in range(6):
         UW = df['UW.' + str(i)].values.tolist()
         UP_inv = list(map(lambda x, y: x/y if y > 0 else 1, UW, MUW))
-        UP_ave = 1/statistics.mean(UP_inv)
+        try:
+            UP_ave = 1/statistics.mean(UP_inv)
+        except ZeroDivisionError:
+            UP_ave = inf
         UP_aves.append(UP_ave)
 
         EW = df['EW.' + str(i)].values.tolist()
         EP_inv = list(map(lambda x, y: x/y if y > 0 else 1, EW, MEW))
-        EP_ave = 1/statistics.mean(EP_inv)
+        try:
+            EP_ave = 1/statistics.mean(EP_inv)
+        except ZeroDivisionError:
+            EP_ave = inf
         EP_aves.append(EP_ave)
     
     return (UP_aves, EP_aves)
 
-summary_col_names = ["Distribution", "n", "m"] \
-            + ["UP-" + heuristic_name for heuristic_name in ece_heuristics.keys()] \
-            + ["EP-" + heuristic_name for heuristic_name in ece_heuristics.keys()]
+summary_col_names = ['Distribution', 'n', 'm'] \
+            + ['UP-' + heuristic_name for heuristic_name in ece_heuristics.keys()] \
+            + ['EP-' + heuristic_name for heuristic_name in ece_heuristics.keys()]
 df = pd.DataFrame(columns = summary_col_names)
 
 for dist_name in dists:
