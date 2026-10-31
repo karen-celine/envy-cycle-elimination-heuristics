@@ -283,8 +283,11 @@ while True:
         while True:
             try:
                 max_instances = int(input('Enter maximum number of instances for each distribution (1-10000): '))
-                break
             except ValueError:
+                print('Please input an integer from 1 to 10000.')
+            if 1 <= max_instances <= 10000:
+                break
+            else:
                 print('Please input an integer from 1 to 10000.')
         break
     elif is_smaller.lower() == 'n':
