@@ -33,8 +33,7 @@ def normalize(utils):
 
 def get_instances(source, n, m, max_instances):
     if isinstance(source, str):
-        unnormalized_instances = read_instances_from_file(
-            source + str(n) + '-' + str(m) + '.csv')
+        unnormalized_instances = read_instances_from_file(f'{source}/{n}-{m}.csv')
         instances = []
         for instance in unnormalized_instances[:max_instances]:
             instances.append(normalize(instance))
@@ -207,7 +206,7 @@ def max_min_matching(instance):
     # Create a graph representing the instance
     n, m = len(instance), len(instance[0])
     agents = list(range(n))
-    goods = ['g'+str(j) for j in range(m)]
+    goods = [f'g{j}' for j in range(m)]
     graph = nx.Graph()
     graph.add_nodes_from(agents, bipartite = 0)
     graph.add_nodes_from(goods, bipartite = 1)
@@ -240,7 +239,7 @@ def max_min_matching_heuristic(instance, alloc, unenvied_agents, unallocated_goo
     if len(unallocated_goods) > len(instance[0]) - len(instance):
         matching = max_min_matching(instance)
         for j in unallocated_goods:
-            g_j = 'g' + str(j)
+            g_j = f'g{j}'
             if g_j in matching:
                 return (matching[g_j], j)
     else:
@@ -263,7 +262,7 @@ dists = {
     'random': random.random,
     'exp': lambda: random.expovariate(1.0),
     'lognorm': lambda: random.lognormvariate(0.0, 1.0),
-    'spliddit': 'instances/spliddit/'}
+    'spliddit': 'instances/spliddit'}
 
 ece_heuristics = {
     'No heuristic': None,
@@ -274,12 +273,12 @@ ece_heuristics = {
     'Agent & good with max util': agent_good_with_max_util,
     'Max-min matching': max_min_matching_heuristic}
 
-data_directory = 'data/'
+data_directory = 'data'
 if not os.path.isdir(data_directory):
     os.mkdir(data_directory)
 
 def get_filename(dist_name, n, m):
-    return data_directory + dist_name + '-' + str(n) + '-' + str(m) + '.csv'
+    return f'{data_directory}/{dist_name}-{n}-{m}.csv'
 
 while True:
     is_smaller = input('Run a smaller version of the experiment? (y/n) ')
@@ -320,7 +319,7 @@ while True:
 random.seed(seed)
 
 for dist_name, dist in dists.items():
-    print('Distribution: ' + dist_name)
+    print(f'Distribution: {dist_name}')
     for n in [2, 3]:
         for m in range(n, 10):
             df = pd.DataFrame(columns = col_names)
@@ -365,7 +364,7 @@ def process_data(dist_name, n, m):
     UP_aves = []
     EP_aves = []
     for i in range(6):
-        UW = df['UW.' + str(i)].values.tolist()
+        UW = df[f'UW.{i}'].values.tolist()
         UP_inv = list(map(lambda x, y: x/y if y > 0 else 1, UW, MUW))
         try:
             UP_ave = 1/statistics.mean(UP_inv)
@@ -373,7 +372,7 @@ def process_data(dist_name, n, m):
             UP_ave = inf
         UP_aves.append(UP_ave)
 
-        EW = df['EW.' + str(i)].values.tolist()
+        EW = df[f'EW.{i}'].values.tolist()
         EP_inv = list(map(lambda x, y: x/y if y > 0 else 1, EW, MEW))
         try:
             EP_ave = 1/statistics.mean(EP_inv)
@@ -384,8 +383,8 @@ def process_data(dist_name, n, m):
     return (UP_aves, EP_aves)
 
 summary_col_names = ['Distribution', 'n', 'm'] \
-            + ['UP-' + heuristic_name for heuristic_name in ece_heuristics.keys()] \
-            + ['EP-' + heuristic_name for heuristic_name in ece_heuristics.keys()]
+            + [f'UP-{heuristic_name}' for heuristic_name in ece_heuristics.keys()] \
+            + [f'EP-{heuristic_name}' for heuristic_name in ece_heuristics.keys()]
 df = pd.DataFrame(columns = summary_col_names)
 
 for dist_name in dists:
