@@ -245,9 +245,9 @@ def max_min_matching_heuristic(instance, alloc, unenvied_agents, unallocated_goo
     else:
         return (unenvied_agents[0], unallocated_goods[0])
 
-########################
-# GENERATING TEST DATA #
-########################
+################################
+# HEURISTICS AND DISTRIBUTIONS #
+################################
 
 col_names = [
     'Instance', 'MUW', 'MEW', 
@@ -273,12 +273,9 @@ ece_heuristics = {
     'Agent & good with max util': agent_good_with_max_util,
     'Max-min matching': max_min_matching_heuristic}
 
-data_directory = 'data'
-if not os.path.isdir(data_directory):
-    os.mkdir(data_directory)
-
-def get_filename(dist_name, n, m):
-    return f'{data_directory}/{dist_name}-{n}-{m}.csv'
+##########################
+# COMMAND LINE ARGUMENTS #
+##########################
 
 while True:
     is_smaller = input('Run a smaller version of the experiment? (y/n) ')
@@ -316,8 +313,18 @@ while True:
     else:
         print('Please input "y" or "n".')
 
-random.seed(seed)
+########################
+# GENERATING TEST DATA #
+########################
 
+data_directory = 'data'
+if not os.path.isdir(data_directory):
+    os.mkdir(data_directory)
+
+def get_filename(dist_name, n, m):
+    return f'{data_directory}/{dist_name}-{n}-{m}.csv'
+
+random.seed(seed)
 for dist_name, dist in dists.items():
     print(f'Distribution: {dist_name}')
     for n in [2, 3]:
