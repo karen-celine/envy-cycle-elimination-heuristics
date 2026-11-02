@@ -21,6 +21,9 @@ def generate_instance_from_distribution(dist, n, m):
 
     return utils
 
+def get_instances_filename(source, n, m):
+    return f'{source}/{n}-{m}.csv'
+
 def read_instances_from_file(filename):
     df = pd.read_csv(filename)
     return list(map(ast.literal_eval, df['instances'].values))
@@ -33,7 +36,8 @@ def normalize(utils):
 
 def get_instances(source, n, m, max_instances):
     if isinstance(source, str):
-        unnormalized_instances = read_instances_from_file(f'{source}/{n}-{m}.csv')
+        instances_file = get_instances_filename(source, n, m)
+        unnormalized_instances = read_instances_from_file(instances_file)
         instances = []
         for instance in unnormalized_instances[:max_instances]:
             instances.append(normalize(instance))
@@ -245,37 +249,36 @@ def max_min_matching_heuristic(instance, alloc, unenvied_agents, unallocated_goo
     else:
         return (unenvied_agents[0], unallocated_goods[0])
 
-################################
-# HEURISTICS AND DISTRIBUTIONS #
-################################
-
-col_names = [
-    'Instance', 'MUW', 'MEW', 
-    'No heuristic', 'UW.0', 'EW.0',
-    'Agent with max util', 'UW.1', 'EW.1',
-    'Good with max util', 'UW.2', 'EW.2',
-    'Agent & good with max util (first round only)', 'UW.3', 'EW.3', 
-    'Agent & good with max util', 'UW.4', 'EW.4',
-    'Max-min matching', 'UW.5', 'EW.5']
-
-dists = {
-    'random': random.random,
-    'exp': lambda: random.expovariate(1.0),
-    'lognorm': lambda: random.lognormvariate(0.0, 1.0),
-    'spliddit': 'instances/spliddit'}
-
-ece_heuristics = {
-    'No heuristic': None,
-    'Agent with max util': agent_with_max_util,
-    'Good with max util': good_with_max_util,
-    'Agent & good with max util (first round only)':
-            agent_good_with_max_util_first_round_only,
-    'Agent & good with max util': agent_good_with_max_util,
-    'Max-min matching': max_min_matching_heuristic}
-
 ##########################
 # COMMAND LINE ARGUMENTS #
 ##########################
+
+print('Run the experiment with:')
+print('1) user instances only;')
+print('2) probabilistic distributions only;')
+print('3) both types of instance distributions.')
+while True:
+    has_dist = input('Select an option (1/2/3): ')
+    match has_dist:
+        case '1':
+            has_prob_dist, has_user_dist = False, True
+            break
+        case '2':
+            has_prob_dist, has_user_dist = True, False
+            break
+        case '3':
+            has_prob_dist, has_user_dist = True, True
+            break
+        case _:
+            print('Please input "1", "2", or "3".')
+
+if has_user_dist:
+    while True:
+        instances_directory = input('Enter directory containing user instances (e.g. "instances/spliddit"): ')
+        if os.path.isdir(f'{instances_directory}/'):
+            break
+        print(f'Directory "{instances_directory}/" not found.')
+    instances_directory = os.path.normpath(instances_directory)
 
 while True:
     is_smaller = input('Run a smaller version of the experiment? (y/n) ')
@@ -285,6 +288,7 @@ while True:
                 max_instances = int(input('Enter maximum number of instances for each distribution (1-10000): '))
             except ValueError:
                 print('Please input an integer from 1 to 10000.')
+                continue
             if 1 <= max_instances <= 10000:
                 break
             else:
@@ -296,29 +300,62 @@ while True:
     else:
         print('Please input "y" or "n".')
 
-while True:
-    has_seed = input('Use seeded random number generator? (y/n) ')
-    if has_seed.lower() == 'y':
-        while True:
-            has_custom_seed = input('Use custom seed? (y/n) ')
-            if has_custom_seed.lower() == 'y':
-                seed = input('Enter custom seed: ')
-                break
-            elif has_custom_seed.lower() == 'n':
-                seed = 'ece'
-                break
-            else:
-                print('Please input "y" or "n".')
-        break
-    elif has_seed.lower() == 'n':
-        seed = None
-        break
-    else:
-        print('Please input "y" or "n".')
+if has_prob_dist:
+    while True:
+        has_seed = input('Use seeded random number generator? (y/n) ')
+        if has_seed.lower() == 'y':
+            while True:
+                has_custom_seed = input('Use custom seed? (y/n) ')
+                if has_custom_seed.lower() == 'y':
+                    seed = input('Enter custom seed (e.g. "ece"): ')
+                    break
+                elif has_custom_seed.lower() == 'n':
+                    seed = 'ece'
+                    break
+                else:
+                    print('Please input "y" or "n".')
+            break
+        elif has_seed.lower() == 'n':
+            seed = None
+            break
+        else:
+            print('Please input "y" or "n".')
+
+    random.seed(seed)
 
 ########################
 # GENERATING TEST DATA #
 ########################
+
+col_names = [
+    'Instance', 'MUW', 'MEW',
+    'No heuristic', 'UW.0', 'EW.0',
+    'Agent with max util', 'UW.1', 'EW.1',
+    'Good with max util', 'UW.2', 'EW.2',
+    'Agent & good with max util (first round only)', 'UW.3', 'EW.3',
+    'Agent & good with max util', 'UW.4', 'EW.4',
+    'Max-min matching', 'UW.5', 'EW.5']
+
+ece_heuristics = {
+    'No heuristic': None,
+    'Agent with max util': agent_with_max_util,
+    'Good with max util': good_with_max_util,
+    'Agent & good with max util (first round only)':
+            agent_good_with_max_util_first_round_only,
+    'Agent & good with max util': agent_good_with_max_util,
+    'Max-min matching': max_min_matching_heuristic}
+
+dists = {}
+
+if has_user_dist:
+    dists['user'] = instances_directory
+
+if has_prob_dist:
+    prob_dists = {
+        'random': random.random,
+        'exp': lambda: random.expovariate(1.0),
+        'lognorm': lambda: random.lognormvariate(0.0, 1.0)}
+    dists.update(prob_dists)
 
 data_directory = 'data'
 if not os.path.isdir(data_directory):
@@ -327,15 +364,18 @@ if not os.path.isdir(data_directory):
 def get_filename(dist_name, n, m):
     return f'{data_directory}/{dist_name}-{n}-{m}.csv'
 
-random.seed(seed)
 for dist_name, dist in dists.items():
     print(f'Distribution: {dist_name}')
     for n in [2, 3]:
         for m in range(n, 10):
-            df = pd.DataFrame(columns = col_names)
-            
-            instances = get_instances(dist, n, m, max_instances)
+            try:
+                instances = get_instances(dist, n, m, max_instances)
+            except FileNotFoundError:
+                print(f'n = {n}, m = {m}: File "{get_instances_filename(dist, n, m)}" not found.')
+                continue
+
             sys.stdout.write(f'n = {n}, m = {m}: 0 out of {len(instances)} instances')
+            df = pd.DataFrame(columns = col_names)
             for i in range(len(instances)):
                 instance = instances[i]
                 result = []
