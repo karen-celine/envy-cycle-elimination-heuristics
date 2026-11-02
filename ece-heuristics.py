@@ -4,6 +4,7 @@ import numpy as np
 import os
 import pandas as pd
 import random
+import shutil
 import statistics
 import sys
 import types
@@ -249,6 +250,27 @@ def max_min_matching_heuristic(instance, alloc, unenvied_agents, unallocated_goo
     else:
         return (unenvied_agents[0], unallocated_goods[0])
 
+###########################
+# CHECKING DATA DIRECTORY #
+###########################
+
+data_directory = 'data'
+if os.path.isdir(data_directory):
+    if os.listdir(data_directory):
+        print(f'Directory "{data_directory}/" is not empty.')
+        while True:
+            can_overwrite = input('Overwrite data? (y/n) ')
+            match can_overwrite.lower():
+                case 'y':
+                    break
+                case 'n':
+                    sys.exit('Program terminated.')
+                case _:
+                    print('Please input "y" or "n".')
+    shutil.rmtree(data_directory)
+
+os.mkdir(data_directory)
+
 ##########################
 # COMMAND LINE ARGUMENTS #
 ##########################
@@ -357,10 +379,6 @@ if has_prob_dist:
         'lognorm': lambda: random.lognormvariate(0.0, 1.0)}
     dists.update(prob_dists)
 
-data_directory = 'data'
-if not os.path.isdir(data_directory):
-    os.mkdir(data_directory)
-
 def get_filename(dist_name, n, m):
     return f'{data_directory}/{dist_name}-{n}-{m}.csv'
 
@@ -440,7 +458,10 @@ df = pd.DataFrame(columns = summary_col_names)
 for dist_name in dists:
     for n in [2, 3]:
         for m in range(n, 10):
-            UPs, EPs = process_data(dist_name, n, m)
+            try:
+                UPs, EPs = process_data(dist_name, n, m)
+            except FileNotFoundError:
+                continue
             result = [dist_name, n, m] + UPs + EPs
             df.loc[len(df)] = result
 
