@@ -4,7 +4,6 @@ import numpy as np
 import os
 import pandas as pd
 import random
-import shutil
 import statistics
 import sys
 import types
@@ -267,9 +266,8 @@ if os.path.isdir(data_directory):
                     sys.exit('Program terminated.')
                 case _:
                     print('Please input "y" or "n".')
-    shutil.rmtree(data_directory)
-
-os.mkdir(data_directory)
+else:
+    os.mkdir(data_directory)
 
 ##########################
 # COMMAND LINE ARGUMENTS #
@@ -386,10 +384,13 @@ for dist_name, dist in dists.items():
     print(f'Distribution: {dist_name}')
     for n in [2, 3]:
         for m in range(n, 10):
+            output_file = get_filename(dist_name, n, m)
             try:
                 instances = get_instances(dist, n, m, max_instances)
             except FileNotFoundError:
                 print(f'n = {n}, m = {m}: File "{get_instances_filename(dist, n, m)}" not found.')
+                if os.path.exists(output_file):
+                    os.remove(output_file)
                 continue
 
             sys.stdout.write(f'n = {n}, m = {m}: 0 out of {len(instances)} instances')
@@ -415,8 +416,7 @@ for dist_name, dist in dists.items():
                 sys.stdout.write(f'n = {n}, m = {m}: {i+1: >5} out of {len(instances)} instances')
             
             print()
-            filename = get_filename(dist_name, n, m)
-            df.to_csv(filename)
+            df.to_csv(output_file)
 
 ##########################
 # COMPILING TEST RESULTS #
