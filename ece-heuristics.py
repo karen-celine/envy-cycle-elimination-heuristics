@@ -327,7 +327,7 @@ if has_prob_dist:
             while True:
                 has_custom_seed = input('Use custom seed? (y/n) ')
                 if has_custom_seed.lower() == 'y':
-                    seed = input('Enter custom seed (e.g. "ece"): ')
+                    seed = input('Enter custom seed (any combination of letters, numbers, and symbols): ')
                     break
                 elif has_custom_seed.lower() == 'n':
                     seed = 'ece'
@@ -393,7 +393,7 @@ for dist_name, dist in dists.items():
                     os.remove(output_file)
                 continue
 
-            sys.stdout.write(f'n = {n}, m = {m}: 0 out of {len(instances)} instances')
+            sys.stdout.write(f'n = {n}, m = {m}:     0 out of {len(instances)} instances')
             df = pd.DataFrame(columns = col_names)
             for i in range(len(instances)):
                 instance = instances[i]
