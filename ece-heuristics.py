@@ -253,10 +253,10 @@ def max_min_matching_heuristic(instance, alloc, unenvied_agents, unallocated_goo
 # CHECKING DATA DIRECTORY #
 ###########################
 
-data_directory = 'data'
-if os.path.isdir(data_directory):
-    if os.listdir(data_directory):
-        print(f'Directory "{data_directory}/" is not empty.')
+output_directory = 'output'
+if os.path.isdir(output_directory):
+    if os.listdir(output_directory):
+        print(f'Directory "{output_directory}/" is not empty.')
         while True:
             can_overwrite = input('Overwrite data? (y/n) ')
             match can_overwrite.lower():
@@ -267,7 +267,7 @@ if os.path.isdir(data_directory):
                 case _:
                     print('Please input "y" or "n".')
 else:
-    os.mkdir(data_directory)
+    os.mkdir(output_directory)
 
 ##########################
 # COMMAND LINE ARGUMENTS #
@@ -377,14 +377,14 @@ if has_prob_dist:
         'lognorm': lambda: random.lognormvariate(0.0, 1.0)}
     dists.update(prob_dists)
 
-def get_filename(dist_name, n, m):
-    return f'{data_directory}/{dist_name}-{n}-{m}.csv'
+def get_output_filename(dist_name, n, m):
+    return f'{output_directory}/{dist_name}-{n}-{m}.csv'
 
 for dist_name, dist in dists.items():
     print(f'Distribution: {dist_name}')
     for n in [2, 3]:
         for m in range(n, 10):
-            output_file = get_filename(dist_name, n, m)
+            output_file = get_output_filename(dist_name, n, m)
             try:
                 instances = get_instances(dist, n, m, max_instances)
             except FileNotFoundError:
@@ -423,7 +423,7 @@ for dist_name, dist in dists.items():
 ##########################
 
 def process_data(dist_name, n, m):
-    filename = get_filename(dist_name, n, m)
+    filename = get_output_filename(dist_name, n, m)
     df = pd.read_csv(filename)
     
     MUW = df['MUW'].values.tolist()
