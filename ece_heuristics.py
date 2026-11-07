@@ -465,4 +465,4 @@ for dist_name in dists:
             result = [dist_name, n, m] + UPs + EPs
             df.loc[len(df)] = result
 
-df.to_csv('data/summary.csv')
+df.to_csv(f'{output_directory}/summary.csv')
