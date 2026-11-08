@@ -294,7 +294,7 @@ while True:
 
 if has_user_dist:
     while True:
-        instances_directory = input('Enter directory containing user instances (e.g. "instances/spliddit"): ')
+        instances_directory = input('Enter directory containing user instances (e.g. "instances/sample"): ')
         if os.path.isdir(f'{instances_directory}/'):
             break
         print(f'Directory "{instances_directory}/" not found.')
